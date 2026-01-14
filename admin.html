@@ -1,130 +1,142 @@
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Admin Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
 
-<!-- DataTables CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
 
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f9f9f9;
+    }
+    h1, h2 {
+      color: #007BFF;
+    }
+    table {
+      margin-bottom: 40px;
+    }
+    #chartReclamations {
+      max-width: 800px;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
 
-<h1>Admin Dashboard</h1>
+  <h1>Admin Dashboard</h1>
 
-<h2>Tableau des Réclamations</h2>
-<table id="reclamationsTable" class="display" style="width:100%">
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>Département</th>
-      <th>Nom</th>
-      <th>Email</th>
-      <th>Réclamation</th>
-      <th>Précisions</th>
-    </tr>
-  </thead>
-</table>
+  <h2>Tableau des Réclamations</h2>
+  <table id="reclamationsTable" class="display" style="width:100%">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Département</th>
+        <th>Nom</th>
+        <th>Email</th>
+        <th>Réclamation</th>
+        <th>Précisions</th>
+      </tr>
+    </thead>
+  </table>
 
-<h2>Tableau des Surveillances</h2>
-<table id="surveillancesTable" class="display" style="width:100%">
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>Département</th>
-      <th>Nom</th>
-      <th>Jour Choisi</th>
-    </tr>
-  </thead>
-</table>
+  <h2>Tableau des Surveillances</h2>
+  <table id="surveillancesTable" class="display" style="width:100%">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Département</th>
+        <th>Nom</th>
+        <th>Jour Choisi</th>
+      </tr>
+    </thead>
+  </table>
 
-<h2>Statistiques (ex : nombre de réclamations par département)</h2>
-<canvas id="chartReclamations" width="800" height="400"></canvas>
+  <h2>Statistiques des Réclamations par Département</h2>
+  <canvas id="chartReclamations"></canvas>
 
-<!-- JQuery, DataTables JS -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+  <!-- JQuery & DataTables JS -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 
-<script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-// ===== URL JSON de ta Web App =====
-const URL_RECLAMATIONS = "https://script.google.com/macros/s/AKfycbzmZuz32NssQ3khol_r0nnpFeDYeTMbJwqJemW0oJL4Z93QgWE-CA7d_OfeU6s3fhNN/exec"; 
-const URL_SURVEILLANCES = "https://script.google.com/macros/s/AKfycbzIkggY4fKURrDzzUVYLqAOopaYuRiO3zbYnMkYHTWlEB624STH6DZvXmB0_CRNYAIK/exec"; 
+  <script>
+    // 🔗 Remplace ces URLs par tes vraies URLs de Web App
+    const URL_RECLAMATIONS = "https://script.google.com/macros/s/AKfycbzmZuz32NssQ3khol_r0nnpFeDYeTMbJwqJemW0oJL4Z93QgWE-CA7d_OfeU6s3fhNN/exec";
+    const URL_SURVEILLANCES = "https://script.google.com/macros/s/AKfycbzIkggY4fKURrDzzUVYLqAOopaYuRiO3zbYnMkYHTWlEB624STH6DZvXmB0_CRNYAIK/exec";
 
-// ===== Charger les données et remplir les tableaux =====
-$(document).ready(function () {
+    $(document).ready(function () {
+      // Tableau Réclamations
+      $('#reclamationsTable').DataTable({
+        ajax: {
+          url: URL_RECLAMATIONS,
+          dataSrc: ""
+        },
+        columns: [
+          { data: "Date" },
+          { data: "Département" },
+          { data: "Nom" },
+          { data: "Email" },
+          { data: "Réclamation" },
+          { data: "Précisions" }
+        ]
+      });
 
-  // Réclamations
-  $('#reclamationsTable').DataTable({
-    ajax: {
-      url: URL_RECLAMATIONS,
-      dataSrc: ""
-    },
-    columns: [
-      { data: "Date" },
-      { data: "Département" },
-      { data: "Nom" },
-      { data: "Email" },
-      { data: "Réclamation" },
-      { data: "Précisions" }
-    ]
-  });
+      // Tableau Surveillances
+      $('#surveillancesTable').DataTable({
+        ajax: {
+          url: URL_SURVEILLANCES,
+          dataSrc: ""
+        },
+        columns: [
+          { data: "Date" },
+          { data: "Département" },
+          { data: "Nom" },
+          { data: "Jour Choisi" }
+        ]
+      });
 
-  // Surveillances
-  $('#surveillancesTable').DataTable({
-    ajax: {
-      url: URL_SURVEILLANCES,
-      dataSrc: ""
-    },
-    columns: [
-      { data: "Date" },
-      { data: "Département" },
-      { data: "Nom" },
-      { data: "Jour Choisi" }
-    ]
-  });
-
-  // Statistiques Chart
-  fetch(URL_RECLAMATIONS)
-    .then(response => response.json())
-    .then(data => {
-      createChart(data);
+      // Graphique Réclamations
+      fetch(URL_RECLAMATIONS)
+        .then(res => res.json())
+        .then(data => createChart(data));
     });
 
-});
+    function createChart(data) {
+      const counts = {};
+      data.forEach(item => {
+        const dep = item.Département || "Autre";
+        counts[dep] = (counts[dep] || 0) + 1;
+      });
 
-// ===== Fonction pour créer un graphique =====
-function createChart(data) {
-  // Exemple : comptage par département
-  const counts = {};
-  data.forEach(item => {
-    counts[item.Département] = (counts[item.Département] || 0) + 1;
-  });
-
-  const labels = Object.keys(counts);
-  const values = Object.values(counts);
-
-  new Chart(document.getElementById("chartReclamations"), {
-    type: "bar",
-    data: {
-      labels: labels,
-      datasets: [{
-        label: "Nombre de réclamations",
-        data: values,
-        backgroundColor: "rgba(54, 162, 235, 0.7)"
-      }]
-    },
-    options: {
-      scales: {
-        y: { beginAtZero: true }
-      }
+      new Chart(document.getElementById("chartReclamations"), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(counts),
+          datasets: [{
+            label: "Réclamations par Département",
+            data: Object.values(counts),
+            backgroundColor: "rgba(54, 162, 235, 0.6)"
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
     }
-  });
-}
+  </script>
 
-</script>
 </body>
 </html>
