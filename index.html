@@ -1,215 +1,104 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin – Planification</title>
+<script>
+  const URL_BASE = "https://script.google.com/macros/s/TON_DEPLOYMENT_ID/exec";
 
-  <!-- DataTables CSS -->
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+  $(document).ready(async function () {
+    try {
+      const reclamationsResponse = await fetch(URL_BASE + "?type=reclamations");
+      const surveillancesResponse = await fetch(URL_BASE + "?type=surveillances");
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f4f6f9;
+      const reclamations = await reclamationsResponse.json();
+      const surveillances = await surveillancesResponse.json();
+
+      console.log("Réclamations :", reclamations);
+      console.log("Surveillances :", surveillances);
+
+      // TABLE RÉCLAMATIONS
+      $('#reclamationsTable').DataTable({
+        data: reclamations.data,
+        columns: [
+          { data: "Date" },
+          { data: "Département" },
+          { data: "Nom" },
+          { data: "Email" },
+          { data: "Réclamation" },
+          { data: "Précisions" }
+        ]
+      });
+
+      // TABLE SURVEILLANCES
+      $('#surveillancesTable').DataTable({
+        data: surveillances.data,
+        columns: [
+          { data: "Date" },
+          { data: "Département" },
+          { data: "Nom" },
+          { data: "Jour Choisi" }
+        ]
+      });
+
+      // TABLE COMBINÉE
+      const combined = [
+        ...reclamations.data.map(r => ({
+          Type: "Réclamation",
+          Date: r.Date,
+          Département: r.Département,
+          Nom: r.Nom,
+          D1: r.Réclamation,
+          D2: r.Précisions
+        })),
+        ...surveillances.data.map(s => ({
+          Type: "Surveillance",
+          Date: s.Date,
+          Département: s.Département,
+          Nom: s.Nom,
+          D1: s["Jour Choisi"],
+          D2: ""
+        }))
+      ];
+
+      $('#combinedTable').DataTable({
+        data: combined,
+        columns: [
+          { data: "Type" },
+          { data: "Date" },
+          { data: "Département" },
+          { data: "Nom" },
+          { data: "D1" },
+          { data: "D2" }
+        ]
+      });
+
+      // CHART
+      createChart(reclamations.data);
+
+    } catch (e) {
+      alert("Erreur lors du chargement des données. Vérifiez l'API Google Apps Script.");
+      console.error(e);
     }
-    h1, h2 {
-      color: #007BFF;
-    }
-    table {
-      margin-bottom: 40px;
-    }
-    .section {
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      margin-bottom: 40px;
-    }
-    #chartReclamations {
-      max-width: 800px;
-      margin-top: 20px;
-    }
-  </style>
-</head>
-<body>
+  });
 
-  <h1>Admin Dashboard – Planification des Examens</h1>
-
-  <div class="section">
-    <h2>Réclamations</h2>
-    <table id="reclamationsTable" class="display" style="width:100%">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Département</th>
-          <th>Nom</th>
-          <th>Email</th>
-          <th>Réclamation</th>
-          <th>Précisions</th>
-        </tr>
-      </thead>
-    </table>
-  </div>
-
-  <div class="section">
-    <h2>Surveillances</h2>
-    <table id="surveillancesTable" class="display" style="width:100%">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Département</th>
-          <th>Nom</th>
-          <th>Jour Choisi</th>
-        </tr>
-      </thead>
-    </table>
-  </div>
-
-  <div class="section">
-    <h2>Tableau Combiné (Tout)</h2>
-    <table id="combinedTable" class="display" style="width:100%">
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Date</th>
-          <th>Département</th>
-          <th>Nom</th>
-          <th>Détail 1</th>
-          <th>Détail 2</th>
-        </tr>
-      </thead>
-    </table>
-  </div>
-
-  <div class="section">
-    <h2>Statistiques des Réclamations par Département</h2>
-    <canvas id="chartReclamations"></canvas>
-  </div>
-
-  <!-- JQuery & DataTables JS -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- SCRIPT CORRIGÉ -->
-  <script>
-    const URL_RECLAMATIONS = "https://script.google.com/macros/s/AKfycbym5UmkBfdc8fQoJGtQW2wd_7kqa73Eqm_P2JfbYi8NI-2278CpTW33tHgfCa37CFxD/exec";
-    const URL_SURVEILLANCES = "https://script.google.com/macros/s/AKfycbxyWW5cOTHluPUTERSa3aZpxtVZKIAlbXu9NGFZbBo-Abv-6_8Ar_lXHieKLBPVEN9U/exec";
-
-    $(document).ready(async function () {
-      try {
-        // Récupération des données
-        const reclamationsResponse = await fetch(URL_RECLAMATIONS);
-        const surveillancesResponse = await fetch(URL_SURVEILLANCES);
-
-        const reclamations = await reclamationsResponse.json();
-        const surveillances = await surveillancesResponse.json();
-
-        console.log("Réclamations :", reclamations);
-        console.log("Surveillances :", surveillances);
-
-        // -------------------------
-        // TABLE RÉCLAMATIONS
-        // -------------------------
-        $('#reclamationsTable').DataTable({
-          data: reclamations.data,
-          columns: [
-            { data: "Date" },
-            { data: "Département" },
-            { data: "Nom" },
-            { data: "Email" },
-            { data: "Réclamation" },
-            { data: "Précisions" }
-          ]
-        });
-
-        // -------------------------
-        // TABLE SURVEILLANCES
-        // -------------------------
-        $('#surveillancesTable').DataTable({
-          data: surveillances.data,
-          columns: [
-            { data: "Date" },
-            { data: "Département" },
-            { data: "Nom" },
-            { data: "Jour Choisi" }
-          ]
-        });
-
-        // -------------------------
-        // TABLE COMBINÉE
-        // -------------------------
-        const combined = [
-          ...reclamations.data.map(r => ({
-            Type: "Réclamation",
-            Date: r.Date,
-            Département: r.Département,
-            Nom: r.Nom,
-            D1: r.Réclamation,
-            D2: r.Précisions
-          })),
-          ...surveillances.data.map(s => ({
-            Type: "Surveillance",
-            Date: s.Date,
-            Département: s.Département,
-            Nom: s.Nom,
-            D1: s["Jour Choisi"],
-            D2: ""
-          }))
-        ];
-
-        $('#combinedTable').DataTable({
-          data: combined,
-          columns: [
-            { data: "Type" },
-            { data: "Date" },
-            { data: "Département" },
-            { data: "Nom" },
-            { data: "D1" },
-            { data: "D2" }
-          ]
-        });
-
-        // -------------------------
-        // CHART STATISTIQUES
-        // -------------------------
-        createChart(reclamations.data);
-
-      } catch (e) {
-        alert("Erreur lors du chargement des données. Vérifiez l'API Google Apps Script.");
-        console.error(e);
-      }
+  function createChart(data) {
+    const counts = {};
+    data.forEach(item => {
+      const dep = item.Département || "Autre";
+      counts[dep] = (counts[dep] || 0) + 1;
     });
 
-    function createChart(data) {
-      const counts = {};
-      data.forEach(item => {
-        const dep = item.Département || "Autre";
-        counts[dep] = (counts[dep] || 0) + 1;
-      });
-
-      new Chart(document.getElementById("chartReclamations"), {
-        type: 'bar',
-        data: {
-          labels: Object.keys(counts),
-          datasets: [{
-            label: "Réclamations par Département",
-            data: Object.values(counts),
-            backgroundColor: "rgba(54, 162, 235, 0.6)"
-          }]
-        },
-        options: {
-          scales: {
-            y: { beginAtZero: true }
-          }
+    new Chart(document.getElementById("chartReclamations"), {
+      type: 'bar',
+      data: {
+        labels: Object.keys(counts),
+        datasets: [{
+          label: "Réclamations par Département",
+          data: Object.values(counts),
+          backgroundColor: "rgba(54, 162, 235, 0.6)"
+        }]
+      },
+      options: {
+        scales: {
+          y: { beginAtZero: true }
         }
-      });
-    }
-  </script>
-
-</body>
-</html>
+      }
+    });
+  }
+</script>
