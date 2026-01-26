@@ -13,9 +13,10 @@
       "type": "image/png"
     },
     {
-      "src": "logo_ecole.png",
+      "src": "image_calendriers.png",
       "sizes": "512x512",
       "type": "image/png"
     }
   ]
 }
+
