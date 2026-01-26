@@ -95,72 +95,94 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <!-- SCRIPT CORRIGÉ -->
   <script>
     const URL_RECLAMATIONS = "https://script.google.com/macros/s/AKfycbzmZuz32NssQ3khol_r0nnpFeDYeTMbJwqJemW0oJL4Z93QgWE-CA7d_OfeU6s3fhNN/exec";
     const URL_SURVEILLANCES = "https://script.google.com/macros/s/AKfycbzIkggY4fKURrDzzUVYLqAOopaYuRiO3zbYnMkYHTWlEB624STH6DZvXmB0_CRNYAIK/exec";
 
     $(document).ready(async function () {
+      try {
+        // Récupération des données
+        const reclamationsResponse = await fetch(URL_RECLAMATIONS);
+        const surveillancesResponse = await fetch(URL_SURVEILLANCES);
 
-      const reclamations = await fetch(URL_RECLAMATIONS).then(r => r.json());
-      const surveillances = await fetch(URL_SURVEILLANCES).then(r => r.json());
+        const reclamations = await reclamationsResponse.json();
+        const surveillances = await surveillancesResponse.json();
 
-      // Réclamations
-      $('#reclamationsTable').DataTable({
-        data: reclamations,
-        columns: [
-          { data: "Date" },
-          { data: "Département" },
-          { data: "Nom" },
-          { data: "Email" },
-          { data: "Réclamation" },
-          { data: "Précisions" }
-        ]
-      });
+        console.log("Réclamations :", reclamations);
+        console.log("Surveillances :", surveillances);
 
-      // Surveillances
-      $('#surveillancesTable').DataTable({
-        data: surveillances,
-        columns: [
-          { data: "Date" },
-          { data: "Département" },
-          { data: "Nom" },
-          { data: "Jour Choisi" }
-        ]
-      });
+        // -------------------------
+        // TABLE RÉCLAMATIONS
+        // -------------------------
+        $('#reclamationsTable').DataTable({
+          data: reclamations.data,
+          columns: [
+            { data: "Date" },
+            { data: "Département" },
+            { data: "Nom" },
+            { data: "Email" },
+            { data: "Réclamation" },
+            { data: "Précisions" }
+          ]
+        });
 
-      // Tableau combiné
-      const combined = [
-        ...reclamations.map(r => ({
-          Type: "Réclamation",
-          Date: r.Date,
-          Département: r.Département,
-          Nom: r.Nom,
-          D1: r.Réclamation,
-          D2: r.Précisions
-        })),
-        ...surveillances.map(s => ({
-          Type: "Surveillance",
-          Date: s.Date,
-          Département: s.Département,
-          Nom: s.Nom,
-          D1: s["Jour Choisi"],
-          D2: ""
-        }))
-      ];
+        // -------------------------
+        // TABLE SURVEILLANCES
+        // -------------------------
+        $('#surveillancesTable').DataTable({
+          data: surveillances.data,
+          columns: [
+            { data: "Date" },
+            { data: "Département" },
+            { data: "Nom" },
+            { data: "Jour Choisi" }
+          ]
+        });
 
-      $('#combinedTable').DataTable({
-        data: combined,
-        columns: [
-          { data: "Type" },
-          { data: "Date" },
-          { data: "Département" },
-          { data: "Nom" },
-          { data: "D1" },
-          { data: "D2" }
-        ]
-      });
+        // -------------------------
+        // TABLE COMBINÉE
+        // -------------------------
+        const combined = [
+          ...reclamations.data.map(r => ({
+            Type: "Réclamation",
+            Date: r.Date,
+            Département: r.Département,
+            Nom: r.Nom,
+            D1: r.Réclamation,
+            D2: r.Précisions
+          })),
+          ...surveillances.data.map(s => ({
+            Type: "Surveillance",
+            Date: s.Date,
+            Département: s.Département,
+            Nom: s.Nom,
+            D1: s["Jour Choisi"],
+            D2: ""
+          }))
+        ];
 
-      createChart(reclamations);
+        $('#combinedTable').DataTable({
+          data: combined,
+          columns: [
+            { data: "Type" },
+            { data: "Date" },
+            { data: "Département" },
+            { data: "Nom" },
+            { data: "D1" },
+            { data: "D2" }
+          ]
+        });
+
+        // -------------------------
+        // CHART STATISTIQUES
+        // -------------------------
+        createChart(reclamations.data);
+
+      } catch (e) {
+        alert("Erreur lors du chargement des données. Vérifiez l'API Google Apps Script.");
+        console.error(e);
+      }
     });
 
     function createChart(data) {
