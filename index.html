@@ -33,53 +33,20 @@
       margin-top: 20px;
     }
 
-    /* Bouton Export Excel orangé vif */
-    button.dt-button {
-      background: #ff7a00 !important;
+    /* Bouton Excel orangé vif */
+    .dt-button.buttons-excel {
+      background-color: #ff6600 !important;
       color: #fff !important;
       border: none !important;
-      border-radius: 4px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-bottom: 10px;
+      border-radius: 4px !important;
+      padding: 5px 12px !important;
     }
-    button.dt-button:hover {
-      background: #e66a00 !important;
-      color: #fff !important;
-    }
-
-    /* Menu principal */
-    nav {
-      background: #007bff;
-      padding: 10px 20px;
-      border-radius: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    nav a {
-      color: white;
-      text-decoration: none;
-      margin-right: 15px;
-      font-weight: bold;
-    }
-    nav a:hover {
-      text-decoration: underline;
+    .dt-button.buttons-excel:hover {
+      background-color: #e65c00 !important;
     }
   </style>
 </head>
 <body>
-
-  <!-- Menu principal -->
-  <nav>
-    <div>
-      <a href="https://sghfsgf.github.io/FSGF-examens/">Accueil</a>
-    </div>
-    <div>
-      <a href="#" onclick="alert('Fonction Charger activée !');">Charger</a>
-    </div>
-  </nav>
 
   <h1>Tableau de Bord de Suivi – Planification des Examens</h1>
 
@@ -138,6 +105,11 @@
   <!-- JQuery & DataTables JS -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+
+  <!-- JSZip pour export Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <!-- DataTables Buttons -->
   <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
   <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
 
@@ -155,7 +127,7 @@
         const surveillancesResp = await fetch(APPS_SCRIPT_URL + "?type=surveillances");
         const surveillances = await surveillancesResp.json();
 
-        // 🔹 DataTable Réclamations avec Export Excel
+        // 🔹 DataTable Réclamations avec bouton Excel
         $('#reclamationsTable').DataTable({
           dom: 'Bfrtip',
           buttons: [{ extend: 'excel', text: 'Exporter Excel', title: 'Reclamations_Examens' }],
@@ -170,7 +142,7 @@
           ]
         });
 
-        // 🔹 DataTable Surveillances avec Export Excel
+        // 🔹 DataTable Surveillances avec bouton Excel
         $('#surveillancesTable').DataTable({
           dom: 'Bfrtip',
           buttons: [{ extend: 'excel', text: 'Exporter Excel', title: 'Surveillances_Examens' }],
@@ -184,7 +156,7 @@
           ]
         });
 
-        // 🔹 Tableau combiné avec Export Excel
+        // 🔹 Tableau combiné avec bouton Excel
         const combined = [
           ...reclamations.data.map(r => ({
             Type: "Réclamation",
@@ -206,7 +178,7 @@
 
         $('#combinedTable').DataTable({
           dom: 'Bfrtip',
-          buttons: [{ extend: 'excel', text: 'Exporter Excel', title: 'Tableau_Combiné' }],
+          buttons: [{ extend: 'excel', text: 'Exporter Excel', title: 'Combined_Examens' }],
           data: combined,
           columns: [
             { data: "Type" },
@@ -251,6 +223,5 @@
       });
     }
   </script>
-
 </body>
 </html>
