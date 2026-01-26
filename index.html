@@ -2,131 +2,204 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Tableau de Bord de Suivi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – Planification</title>
 
-  <!-- DataTables -->
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
 
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
+      background: #f4f6f9;
     }
-    h1 {
-      margin-bottom: 10px;
-    }
-    #refreshBtn {
-      padding: 8px 16px;
-      font-size: 15px;
-      cursor: pointer;
-      margin-bottom: 20px;
+    h1, h2 {
+      color: #007BFF;
     }
     table {
-      width: 100%;
       margin-bottom: 40px;
+    }
+    .section {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 40px;
+    }
+    #chartReclamations {
+      max-width: 800px;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
 
-<h1>Tableau de Bord de Suivi</h1>
+  <h1>Tableau de Bord de Suivi – Planification des Examens</h1>
 
-<button id="refreshBtn">🔄 Actualiser</button>
+  <div class="section">
+    <h2>Réclamations</h2>
+    <table id="reclamationsTable" class="display" style="width:100%">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Departement</th>
+          <th>Nom</th>
+          <th>Email</th>
+          <th>Reclamation</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
 
-<h2>Réclamations</h2>
-<table id="reclamationsTable" class="display">
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>Département</th>
-      <th>Nom</th>
-      <th>Email</th>
-      <th>Réclamation</th>
-      <th>Détails</th>
-    </tr>
-  </thead>
-</table>
+  <div class="section">
+    <h2>Surveillances</h2>
+    <table id="surveillancesTable" class="display" style="width:100%">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Nom</th>
+          <th>Departement</th>
+          <th>Jour</th>
+          <th>Email</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
 
-<h2>Surveillances</h2>
-<table id="surveillancesTable" class="display">
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>Nom</th>
-      <th>Département</th>
-      <th>Jour</th>
-      <th>Email</th>
-    </tr>
-  </thead>
-</table>
+  <div class="section">
+    <h2>Tableau Combiné (Tout)</h2>
+    <table id="combinedTable" class="display" style="width:100%">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Date</th>
+          <th>Nom</th>
+          <th>Département</th>
+          <th>Détail 1</th>
+          <th>Détail 2</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
 
-<!-- JS -->
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <div class="section">
+    <h2>Statistiques des Réclamations par Département</h2>
+    <canvas id="chartReclamations"></canvas>
+  </div>
 
-<script>
-const API_URL = "TON_URL_APPS_SCRIPT_ICI";
+  <!-- JQuery & DataTables JS -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 
-let tableReclamations = null;
-let tableSurveillances = null;
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-async function chargerDonnees() {
-  const btn = document.getElementById("refreshBtn");
-  btn.disabled = true;
-  btn.textContent = "⏳ Chargement...";
+  <script>
+    // 🔹 URL de ton Apps Script
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7sdWKy6YV6bq33Z4jvrX6Q7eK315xCHfHgtIFFPwy0AZwCfAX8Whm8hjpGM5AHrOVlg/exec";
 
-  try {
-    const response = await fetch(API_URL);
-    const data = await response.json();
+    $(document).ready(async function () {
+      try {
+        // 🔹 Récupération des Réclamations
+        const reclamationsResp = await fetch(APPS_SCRIPT_URL + "?type=reclamations");
+        const reclamations = await reclamationsResp.json();
 
-    // 🔴 sécurité si données vides
-    const reclamations = data.reclamations || [];
-    const surveillances = data.surveillances || [];
+        // 🔹 Récupération des Surveillances
+        const surveillancesResp = await fetch(APPS_SCRIPT_URL + "?type=surveillances");
+        const surveillances = await surveillancesResp.json();
 
-    // 🔁 Réclamations
-    if (tableReclamations) tableReclamations.destroy();
-    tableReclamations = $('#reclamationsTable').DataTable({
-      data: reclamations,
-      columns: [
-        { data: 0 },
-        { data: 1 },
-        { data: 2 },
-        { data: 3 },
-        { data: 4 },
-        { data: 5 }
-      ],
-      language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json" }
+        // 🔹 DataTable Réclamations
+        $('#reclamationsTable').DataTable({
+          data: reclamations.data,
+          columns: [
+            { data: "Date" },
+            { data: "Departement" },
+            { data: "Nom" },
+            { data: "Email" },
+            { data: "Reclamation" },
+            { data: "Details" }
+          ]
+        });
+
+        // 🔹 DataTable Surveillances
+        $('#surveillancesTable').DataTable({
+          data: surveillances.data,
+          columns: [
+            { data: "Date" },
+            { data: "Nom" },
+            { data: "Departement" },
+            { data: "Jour" },
+            { data: "Email" }
+          ]
+        });
+
+        // 🔹 Tableau combiné
+        const combined = [
+          ...reclamations.data.map(r => ({
+            Type: "Réclamation",
+            Date: r.Date,
+            Nom: r.Nom,
+            Département: r.Departement,
+            D1: r.Reclamation,
+            D2: r.Details
+          })),
+          ...surveillances.data.map(s => ({
+            Type: "Surveillance",
+            Date: s.Date,
+            Nom: s.Nom,
+            Département: s.Departement,
+            D1: s.Jour,
+            D2: s.Email
+          }))
+        ];
+
+        $('#combinedTable').DataTable({
+          data: combined,
+          columns: [
+            { data: "Type" },
+            { data: "Date" },
+            { data: "Nom" },
+            { data: "Département" },
+            { data: "D1" },
+            { data: "D2" }
+          ]
+        });
+
+        // 🔹 Création du graphique Réclamations
+        createChart(reclamations.data);
+
+      } catch (error) {
+        alert("Erreur lors du chargement des données. Vérifiez l'Apps Script.");
+        console.error(error);
+      }
     });
 
-    // 🔁 Surveillances
-    if (tableSurveillances) tableSurveillances.destroy();
-    tableSurveillances = $('#surveillancesTable').DataTable({
-      data: surveillances,
-      columns: [
-        { data: 0 },
-        { data: 1 },
-        { data: 2 },
-        { data: 3 },
-        { data: 4 }
-      ],
-      language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json" }
-    });
+    function createChart(data) {
+      const counts = {};
+      data.forEach(item => {
+        const dep = item.Departement || "Autre";
+        counts[dep] = (counts[dep] || 0) + 1;
+      });
 
-  } catch (e) {
-    alert("Erreur de chargement des données");
-    console.error(e);
-  }
-
-  btn.disabled = false;
-  btn.textContent = "🔄 Actualiser";
-}
-
-// bouton
-document.getElementById("refreshBtn").addEventListener("click", chargerDonnees);
-
-// chargement initial (après que la page est prête)
-window.onload = chargerDonnees;
-</script>
-
+      new Chart(document.getElementById("chartReclamations"), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(counts),
+          datasets: [{
+            label: "Réclamations par Département",
+            data: Object.values(counts),
+            backgroundColor: "rgba(54, 162, 235, 0.6)"
+          }]
+        },
+        options: {
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+  </script>
 </body>
 </html>
