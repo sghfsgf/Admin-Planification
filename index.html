@@ -32,21 +32,45 @@
       max-width: 800px;
       margin-top: 20px;
     }
-
-    /* Bouton Excel orangé vif */
-    .dt-button.buttons-excel {
-      background-color: #ff6600 !important;
-      color: #fff !important;
-      border: none !important;
-      border-radius: 4px !important;
-      padding: 5px 12px !important;
+    /* Menu orangé vif */
+    nav {
+      background: #ff6600;
+      padding: 10px 20px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .dt-button.buttons-excel:hover {
-      background-color: #e65c00 !important;
+    nav a, nav label {
+      color: #fff;
+      font-weight: bold;
+      text-decoration: none;
+      cursor: pointer;
+      margin-right: 15px;
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+    nav a:hover, nav label:hover {
+      opacity: 0.9;
+    }
+    #pdfUpload {
+      display: none;
     }
   </style>
 </head>
 <body>
+
+  <!-- Menu principal -->
+  <nav>
+    <div>
+      <a href="index.html">Accueil</a>
+    </div>
+    <div>
+      <label for="pdfUpload">Charger PDF</label>
+      <input type="file" id="pdfUpload" accept="application/pdf">
+    </div>
+  </nav>
 
   <h1>Tableau de Bord de Suivi – Planification des Examens</h1>
 
@@ -102,22 +126,16 @@
     <canvas id="chartReclamations"></canvas>
   </div>
 
-  <!-- JQuery & DataTables JS -->
+  <!-- JQuery, DataTables et Buttons JS -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-
-  <!-- JSZip pour export Excel -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
-  <!-- DataTables Buttons -->
   <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
   <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-
-  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7sdWKy6YV6bq33Z4jvrX6Q7eK315xCHfHgtIFFPwy0AZwCfAX8Whm8hjpGM5AHrOVlg/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/TON_ID/exec";
 
     $(document).ready(async function () {
       try {
@@ -127,10 +145,15 @@
         const surveillancesResp = await fetch(APPS_SCRIPT_URL + "?type=surveillances");
         const surveillances = await surveillancesResp.json();
 
-        // 🔹 DataTable Réclamations avec bouton Excel
+        // 🔹 Réclamations DataTable avec Export Excel
         $('#reclamationsTable').DataTable({
           dom: 'Bfrtip',
-          buttons: [{ extend: 'excel', text: 'Exporter Excel', title: 'Reclamations_Examens' }],
+          buttons: [{
+            extend: 'excelHtml5',
+            text: 'Exporter Excel',
+            className: 'btnExcel', // couleur via CSS
+            exportOptions: { columns: ':visible' }
+          }],
           data: reclamations.data,
           columns: [
             { data: "Date" },
@@ -142,10 +165,15 @@
           ]
         });
 
-        // 🔹 DataTable Surveillances avec bouton Excel
+        // 🔹 Surveillances DataTable avec Export Excel
         $('#surveillancesTable').DataTable({
           dom: 'Bfrtip',
-          buttons: [{ extend: 'excel', text: 'Exporter Excel', title: 'Surveillances_Examens' }],
+          buttons: [{
+            extend: 'excelHtml5',
+            text: 'Exporter Excel',
+            className: 'btnExcel',
+            exportOptions: { columns: ':visible' }
+          }],
           data: surveillances.data,
           columns: [
             { data: "Date" },
@@ -156,7 +184,7 @@
           ]
         });
 
-        // 🔹 Tableau combiné avec bouton Excel
+        // 🔹 Tableau combiné
         const combined = [
           ...reclamations.data.map(r => ({
             Type: "Réclamation",
@@ -178,7 +206,12 @@
 
         $('#combinedTable').DataTable({
           dom: 'Bfrtip',
-          buttons: [{ extend: 'excel', text: 'Exporter Excel', title: 'Combined_Examens' }],
+          buttons: [{
+            extend: 'excelHtml5',
+            text: 'Exporter Excel',
+            className: 'btnExcel',
+            exportOptions: { columns: ':visible' }
+          }],
           data: combined,
           columns: [
             { data: "Type" },
@@ -198,13 +231,13 @@
       }
     });
 
+    // 🔹 Graphique
     function createChart(data) {
       const counts = {};
       data.forEach(item => {
         const dep = item.Departement || "Autre";
         counts[dep] = (counts[dep] || 0) + 1;
       });
-
       new Chart(document.getElementById("chartReclamations"), {
         type: 'bar',
         data: {
@@ -215,13 +248,21 @@
             backgroundColor: "rgba(54, 162, 235, 0.6)"
           }]
         },
-        options: {
-          scales: {
-            y: { beginAtZero: true }
-          }
-        }
+        options: { scales: { y: { beginAtZero: true } } }
       });
     }
+
+    // 🔹 Upload PDF
+    document.getElementById('pdfUpload').addEventListener('change', function(e){
+      const file = e.target.files[0];
+      if(!file) return;
+      alert('PDF sélectionné : ' + file.name + '\n⚠️ Téléversement sur GitHub nécessite script/API côté serveur.');
+    });
   </script>
+
+  <style>
+    /* Bouton Export Excel orangé vif */
+    .btnExcel { background:#ff6600 !important; color:#fff !important; border-radius:4px; padding:5px 10px; font-weight:bold; }
+  </style>
 </body>
 </html>
