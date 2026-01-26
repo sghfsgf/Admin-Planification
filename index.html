@@ -3,201 +3,257 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ressources – Planification des Examens</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>Admin – Planification</title>
+
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+
+  <!-- Manifest pour PWA -->
   <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ff6600">
+
   <style>
-    /* ===== MENU ===== */
-    .main-nav {
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f6f9;
+    }
+
+    /* Menu principal */
+    nav {
+      background-color: #ff6600;
+      color: white;
+      padding: 10px 20px;
       display: flex;
       align-items: center;
-      padding: 10px 20px;
-      background-color: #ff6600; /* fond orange vif */
-      border-bottom: 1px solid #ddd;
+      gap: 20px;
     }
-
-    .main-nav .logo img {
-      height: 40px;
-    }
-
-    .menu {
-      list-style: none;
-      display: flex;
-      gap: 15px;
-      margin-left: 20px;
-      padding: 0;
-    }
-
-    .menu li a {
+    nav a {
+      color: white;
       text-decoration: none;
-      color: #fff; /* texte blanc sur fond orange */
-      padding: 6px 12px;
-      border-radius: 6px;
       font-weight: bold;
-      transition: all 0.2s;
+    }
+    nav a:hover {
+      text-decoration: underline;
     }
 
-    .menu li a:hover {
-      background-color: #ff9900; /* orange clair au survol */
-      color: #fff;
-    }
-
-    .menu a.active {
-      background-color: #e65c00; /* orange foncé pour le lien actif */
-    }
-
-    /* Hamburger responsive */
-    .hamburger {
-      display: none;
-      font-size: 1.5em;
-      cursor: pointer;
-      margin-left: auto;
-      color: #fff;
-    }
-
-    @media screen and (max-width: 768px) {
-      .menu {
-        display: none;
-        flex-direction: column;
-        gap: 5px;
-        margin-left: 0;
-      }
-      .menu.active {
-        display: flex;
-      }
-      .hamburger {
-        display: block;
-      }
-    }
-
-    /* Sections et titres alignés à gauche */
-    section {
-      max-width: 800px;   /* largeur max du contenu */
-      margin: 20px 0;     /* supprime le centrage horizontal */
-      padding: 0 20px;
-      text-align: left;   /* texte et liens alignés à gauche */
+    nav img {
+      width: 60px;
+      height: 60px;
+      margin-right: 15px;
     }
 
     h1, h2 {
-      text-align: left;
-      margin-bottom: 10px;
+      color: #007BFF;
     }
 
-    .pdf-link {
-      display: block;
-      padding: 10px;
-      margin: 5px 0;
-      background: #f1f1f1;
-      border-radius: 6px;
-      text-decoration: none;
-      color: #007bff;
-      transition: all 0.2s;
+    table {
+      margin-bottom: 40px;
     }
 
-    .pdf-link:hover {
-      background: #e1e1e1;
-      transform: translateY(-2px);
+    .section {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin: 20px;
     }
 
-    footer {
-  width: 100%;
-  text-align: center;     /* texte centré */
-  padding: 20px 0;        /* espace vertical */
-  font-size: 0.9em;
-  color: #fff;            /* texte blanc */
-  background-color: #007bff; /* bleu vif */
-}
+    #chartReclamations {
+      max-width: 800px;
+      margin-top: 20px;
+    }
+
+    /* Boutons Export Excel en orangé vif */
+    button.dt-button {
+      background: #ff6600 !important;
+      color: #fff !important;
+      border: none !important;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    button.dt-button:hover {
+      background: #e65c00 !important;
+      color: #fff !important;
+    }
 
   </style>
 </head>
 <body>
 
-<!-- ===== MENU ===== -->
-<nav class="main-nav">
-  <a class="logo" href="index.html">
-    <img src="logo_ecole.png" alt="Logo de l'école">
-  </a>
-  <div class="hamburger" id="hamburger">☰</div>
-  <ul class="menu" id="menu">
-    <li><a href="index.html">Accueil</a></li>
-    <li><a href="examens.html">Examens</a></li>
-    <li><a href="surveillances.html">Surveillances</a></li>
-    <li><a href="reclamations.html" id="menu-reclamations">Réclamations</a></li>
-    <li><a href="ressources.html" id="menu-ressources">Ressources</a></li>
-     <li><a href="#" onclick="ouvrirAdmin()">Admin</a></li>
-  </ul>
-</nav>
+  <!-- Menu principal -->
+  <nav>
+    <img src="https://raw.githubusercontent.com/sghfsgf/FSFG-examens/main/logo.png" alt="Logo Admin">
+    <a href="#">Accueil</a>
+    <a href="#">Charger PDF</a>
+  </nav>
 
-<!-- ===== HEADER ===== -->
-<header>
-  <h1>Ressources – Examens et Surveillances</h1>
-</header>
+  <h1 style="margin:20px 20px 0 20px;">Tableau de Bord de Suivi – Planification des Examens</h1>
 
-<!-- ===== PDF Examens ===== -->
-<section>
-  <h2>📄 Documents des Examens</h2>
-  <a class="pdf-link" href="examens_L1.pdf" target="_blank">Licence 1</a>
-  <a class="pdf-link" href="examens_L2.pdf" target="_blank">Licence 2</a>
-  <a class="pdf-link" href="examens_L3.pdf" target="_blank">Licence 3</a>
-  <a class="pdf-link" href="examens_masters.pdf" target="_blank">Mastères</a>
-  <a class="pdf-link" href="examens_complet.pdf" target="_blank">Calendrier complet FSGF</a>
-  <a class="pdf-link" href="reglement_examens.pdf" target="_blank">Règlement des examens</a>
-</section>
+  <!-- Réclamations -->
+  <div class="section">
+    <h2>Réclamations</h2>
+    <table id="reclamationsTable" class="display" style="width:100%">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Departement</th>
+          <th>Nom</th>
+          <th>Email</th>
+          <th>Reclamation</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
 
-<!-- ===== Fichiers Excel Surveillances ===== -->
-<section>
-  <h2>📊 Fichiers Excel par Département</h2>
-  <a class="pdf-link" href="liste_enseignants.pdf" target="_blank">Liste des enseignants</a>
-  <a class="pdf-link" href="Dep_SV.xlsx" download>Département SV</a>
-  <a class="pdf-link" href="Dep_ST.xlsx" download>Département ST</a>
-  <a class="pdf-link" href="Dep_INFO.xlsx" download>Département INFO</a>
-  <a class="pdf-link" href="Dep_CH.xlsx" download>Département CH</a>
-  <a class="pdf-link" href="Dep_PHYS.xlsx" download>Département PHYS</a>
-  <a class="pdf-link" href="Dep_FT.xlsx" download>Département FT</a>
-  <a class="pdf-link" href="Dep_MATHS.xlsx" download>Département MATHS</a>
-</section>
+  <!-- Surveillances -->
+  <div class="section">
+    <h2>Surveillances</h2>
+    <table id="surveillancesTable" class="display" style="width:100%">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Nom</th>
+          <th>Departement</th>
+          <th>Jour</th>
+          <th>Email</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
 
-<!-- ===== FOOTER ===== -->
-<footer>
-  <p>Site officiel : <a href="https://fsgf.rnu.tn/" target="_blank">https://fsgf.rnu.tn/</a></p>
-  <p>© 2026 Service de Planification</p>
-</footer>
+  <!-- Tableau combiné -->
+  <div class="section">
+    <h2>Tableau Combiné (Tout)</h2>
+    <table id="combinedTable" class="display" style="width:100%">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Date</th>
+          <th>Nom</th>
+          <th>Département</th>
+          <th>Détail 1</th>
+          <th>Détail 2</th>
+        </tr>
+      </thead>
+    </table>
+  </div>
 
-<!-- ===== SCRIPT MENU MOBILE & Lien actif ===== -->
-<script>
-  // Hamburger menu
-  document.getElementById("hamburger").addEventListener("click", function() {
-    document.getElementById("menu").classList.toggle("active");
-  });
+  <!-- Graphique -->
+  <div class="section">
+    <h2>Statistiques des Réclamations par Département</h2>
+    <canvas id="chartReclamations"></canvas>
+  </div>
 
-  // Lien actif
-  const currentPage = location.pathname.split("/").pop();
-  if(currentPage === "ressources.html") {
-    document.getElementById("menu-ressources").classList.add("active");
-  } else if(currentPage === "reclamations.html") {
-    document.getElementById("menu-reclamations").classList.add("active");
-  } else if(currentPage === "index.html") {
-    document.querySelector('a[href="index.html"]').classList.add("active");
-  } else if(currentPage === "examens.html") {
-    document.querySelector('a[href="examens.html"]').classList.add("active");
-  } else if(currentPage === "surveillances.html") {
-    document.querySelector('a[href="surveillances.html"]').classList.add("active");
-  }
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  // Fermer menu mobile si lien cliqué
-  document.querySelectorAll(".menu a").forEach(link => {
-    link.addEventListener("click", function(e){
-      if(link.href === location.href){
-        e.preventDefault();
-      } else {
-        document.getElementById("menu").classList.remove("active");
+  <script>
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7sdWKy6YV6bq33Z4jvrX6Q7eK315xCHfHgtIFFPwy0AZwCfAX8Whm8hjpGM5AHrOVlg/exec";
+
+    $(document).ready(async function () {
+      try {
+        const reclamationsResp = await fetch(APPS_SCRIPT_URL + "?type=reclamations");
+        const reclamations = await reclamationsResp.json();
+
+        const surveillancesResp = await fetch(APPS_SCRIPT_URL + "?type=surveillances");
+        const surveillances = await surveillancesResp.json();
+
+        $('#reclamationsTable').DataTable({
+          dom: 'Bfrtip',
+          buttons: [{ extend: 'excel', text: 'Exporter Excel', title: 'Reclamations_Examens' }],
+          data: reclamations.data,
+          columns: [
+            { data: "Date" },
+            { data: "Departement" },
+            { data: "Nom" },
+            { data: "Email" },
+            { data: "Reclamation" },
+            { data: "Details" }
+          ]
+        });
+
+        $('#surveillancesTable').DataTable({
+          dom: 'Bfrtip',
+          buttons: [{ extend: 'excel', text: 'Exporter Excel', title: 'Surveillances_Examens' }],
+          data: surveillances.data,
+          columns: [
+            { data: "Date" },
+            { data: "Nom" },
+            { data: "Departement" },
+            { data: "Jour" },
+            { data: "Email" }
+          ]
+        });
+
+        const combined = [
+          ...reclamations.data.map(r => ({
+            Type: "Réclamation",
+            Date: r.Date,
+            Nom: r.Nom,
+            Département: r.Departement,
+            D1: r.Reclamation,
+            D2: r.Details
+          })),
+          ...surveillances.data.map(s => ({
+            Type: "Surveillance",
+            Date: s.Date,
+            Nom: s.Nom,
+            Département: s.Departement,
+            D1: s.Jour,
+            D2: s.Email
+          }))
+        ];
+
+        $('#combinedTable').DataTable({
+          dom: 'Bfrtip',
+          buttons: [{ extend: 'excel', text: 'Exporter Excel', title: 'Tableau_Combine_Examens' }],
+          data: combined,
+          columns: [
+            { data: "Type" },
+            { data: "Date" },
+            { data: "Nom" },
+            { data: "Département" },
+            { data: "D1" },
+            { data: "D2" }
+          ]
+        });
+
+        createChart(reclamations.data);
+
+      } catch (e) {
+        console.error(e);
+        alert("Erreur lors du chargement des données.");
       }
     });
-  });
-</script>
 
+    function createChart(data) {
+      const counts = {};
+      data.forEach(item => {
+        const dep = item.Departement || "Autre";
+        counts[dep] = (counts[dep] || 0) + 1;
+      });
+
+      new Chart(document.getElementById("chartReclamations"), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(counts),
+          datasets: [{
+            label: "Réclamations par Département",
+            data: Object.values(counts),
+            backgroundColor: "rgba(54, 162, 235, 0.6)"
+          }]
+        },
+        options: { scales: { y: { beginAtZero: true } } }
+      });
+    }
+  </script>
 </body>
 </html>
-
-
-
