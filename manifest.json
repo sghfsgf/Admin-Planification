@@ -1,0 +1,21 @@
+{
+  "name": "Admin Planification",
+  "short_name": "Admin",
+  "description": "Tableau de bord pour le suivi des examens",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ff6600",
+  "icons": [
+    {
+      "src": "logo_ecole.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo_ecole.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
