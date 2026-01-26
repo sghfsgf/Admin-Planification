@@ -3,13 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin – Planification</title>
+  <title>Tableau de Bord de Suivi – Planification des Examens</title>
 
   <!-- DataTables CSS -->
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
-
-  <!-- DataTables Buttons CSS -->
-  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
 
   <style>
     body {
@@ -34,23 +31,62 @@
       max-width: 800px;
       margin-top: 20px;
     }
+
     /* Bouton Export Excel en orangé vif */
-button.dt-button {
-  background: #ff7a00 !important;
-  color: #fff !important;
-  border: none !important;
-  border-radius: 4px;
-  font-weight: bold;
-}
+    button.dt-button {
+      background: #ff7a00 !important;
+      color: #fff !important;
+      border: none !important;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    button.dt-button:hover {
+      background: #e66a00 !important;
+      color: #fff !important;
+    }
 
-button.dt-button:hover {
-  background: #e66a00 !important;
-  color: #fff !important;
-}
-
+    /* Menu principal */
+    nav {
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      background:#ff7a00;
+      padding:10px 20px;
+      border-radius:8px;
+      margin-bottom:20px;
+    }
+    nav a {
+      color:#fff;
+      text-decoration:none;
+      font-weight:bold;
+      font-size:16px;
+      margin-right:20px;
+    }
+    #btnCharger {
+      background:#fff;
+      color:#ff7a00;
+      border:none;
+      padding:8px 16px;
+      border-radius:4px;
+      font-weight:bold;
+      cursor:pointer;
+    }
+    #btnCharger:hover {
+      background:#f0f0f0;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Menu principal -->
+  <nav>
+    <div>
+      <a href="#">Accueil</a>
+    </div>
+    <div>
+      <button id="btnCharger">Charger PDF</button>
+    </div>
+  </nav>
 
   <h1>Tableau de Bord de Suivi – Planification des Examens</h1>
 
@@ -106,40 +142,33 @@ button.dt-button:hover {
     <canvas id="chartReclamations"></canvas>
   </div>
 
-  <!-- JQuery -->
+  <!-- JQuery & DataTables JS -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-  <!-- DataTables -->
   <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-
-  <!-- DataTables Buttons -->
-  <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-  <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-
-  <!-- Excel dependency -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
+    // 🔹 URL de ton Apps Script
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7sdWKy6YV6bq33Z4jvrX6Q7eK315xCHfHgtIFFPwy0AZwCfAX8Whm8hjpGM5AHrOVlg/exec";
 
     $(document).ready(async function () {
       try {
+        // 🔹 Récupération des Réclamations
         const reclamationsResp = await fetch(APPS_SCRIPT_URL + "?type=reclamations");
         const reclamations = await reclamationsResp.json();
 
+        // 🔹 Récupération des Surveillances
         const surveillancesResp = await fetch(APPS_SCRIPT_URL + "?type=surveillances");
         const surveillances = await surveillancesResp.json();
 
+        // 🔹 DataTable Réclamations
         $('#reclamationsTable').DataTable({
           dom: 'Bfrtip',
-          buttons: [{
-            extend: 'excel',
-            text: 'Exporter Excel',
-            title: 'Reclamations_Examens'
-          }],
+          buttons: [{ extend: 'excel', text: 'Exporter Excel', title: 'Reclamations_Examens' }],
           data: reclamations.data,
           columns: [
             { data: "Date" },
@@ -151,13 +180,10 @@ button.dt-button:hover {
           ]
         });
 
+        // 🔹 DataTable Surveillances
         $('#surveillancesTable').DataTable({
           dom: 'Bfrtip',
-          buttons: [{
-            extend: 'excel',
-            text: 'Exporter Excel',
-            title: 'Surveillances_Examens'
-          }],
+          buttons: [{ extend: 'excel', text: 'Exporter Excel', title: 'Surveillances_Examens' }],
           data: surveillances.data,
           columns: [
             { data: "Date" },
@@ -168,6 +194,7 @@ button.dt-button:hover {
           ]
         });
 
+        // 🔹 Tableau combiné
         const combined = [
           ...reclamations.data.map(r => ({
             Type: "Réclamation",
@@ -189,11 +216,7 @@ button.dt-button:hover {
 
         $('#combinedTable').DataTable({
           dom: 'Bfrtip',
-          buttons: [{
-            extend: 'excel',
-            text: 'Exporter Excel',
-            title: 'Tableau_Combine_Examens'
-          }],
+          buttons: [{ extend: 'excel', text: 'Exporter Excel', title: 'Combined_Examens' }],
           data: combined,
           columns: [
             { data: "Type" },
@@ -205,11 +228,18 @@ button.dt-button:hover {
           ]
         });
 
+        // 🔹 Création du graphique Réclamations
         createChart(reclamations.data);
 
-      } catch (e) {
-        console.error(e);
+      } catch (error) {
+        alert("Erreur lors du chargement des données. Vérifiez l'Apps Script.");
+        console.error(error);
       }
+
+      // 🔹 Bouton Charger PDF
+      document.getElementById("btnCharger").addEventListener("click", function() {
+        alert("Fonctionnalité de chargement PDF à implémenter !");
+      });
     });
 
     function createChart(data) {
@@ -230,7 +260,9 @@ button.dt-button:hover {
           }]
         },
         options: {
-          scales: { y: { beginAtZero: true } }
+          scales: {
+            y: { beginAtZero: true }
+          }
         }
       });
     }
