@@ -1,97 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Tableau de Bord de Suivi</title>
+
+  <!-- DataTables -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    #refreshBtn {
+      padding: 8px 16px;
+      font-size: 15px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      margin-bottom: 40px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Tableau de Bord de Suivi</h1>
+
+<button id="refreshBtn">🔄 Actualiser</button>
+
+<h2>Réclamations</h2>
+<table id="reclamationsTable" class="display">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Département</th>
+      <th>Nom</th>
+      <th>Email</th>
+      <th>Réclamation</th>
+      <th>Détails</th>
+    </tr>
+  </thead>
+</table>
+
+<h2>Surveillances</h2>
+<table id="surveillancesTable" class="display">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Nom</th>
+      <th>Département</th>
+      <th>Jour</th>
+      <th>Email</th>
+    </tr>
+  </thead>
+</table>
+
+<!-- JS -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
 <script>
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7sdWKy6YV6bq33Z4jvrX6Q7eK315xCHfHgtIFFPwy0AZwCfAX8Whm8hjpGM5AHrOVlg/exec";
+const API_URL = "TON_URL_APPS_SCRIPT_ICI";
 
-let reclamationsTable, surveillancesTable, combinedTable;
+let tableReclamations = null;
+let tableSurveillances = null;
 
-$(document).ready(function () {
-  loadData();
-
-  document.getElementById("refreshBtn").addEventListener("click", loadData);
-});
-
-async function loadData() {
+async function chargerDonnees() {
   const btn = document.getElementById("refreshBtn");
-  const loading = document.getElementById("loading");
-  const error = document.getElementById("error");
-
-  btn.innerHTML = "⏳ Actualisation en cours...";
   btn.disabled = true;
-  loading.style.display = "block";
-  error.style.display = "none";
+  btn.textContent = "⏳ Chargement...";
 
   try {
-    const [rRes, sRes] = await Promise.all([
-      fetch(APPS_SCRIPT_URL + "?type=reclamations"),
-      fetch(APPS_SCRIPT_URL + "?type=surveillances")
-    ]);
+    const response = await fetch(API_URL);
+    const data = await response.json();
 
-    if (!rRes.ok || !sRes.ok) throw new Error("API");
+    // 🔴 sécurité si données vides
+    const reclamations = data.reclamations || [];
+    const surveillances = data.surveillances || [];
 
-    const reclamations = await rRes.json();
-    const surveillances = await sRes.json();
+    // 🔁 Réclamations
+    if (tableReclamations) tableReclamations.destroy();
+    tableReclamations = $('#reclamationsTable').DataTable({
+      data: reclamations,
+      columns: [
+        { data: 0 },
+        { data: 1 },
+        { data: 2 },
+        { data: 3 },
+        { data: 4 },
+        { data: 5 }
+      ],
+      language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json" }
+    });
 
-    // 🔹 Réclamations
-    if (reclamationsTable) reclamationsTable.clear().rows.add(reclamations.data).draw();
-    else {
-      reclamationsTable = $('#reclamationsTable').DataTable({
-        data: reclamations.data,
-        pageLength: 20,
-        columns: [
-          { data: "Date" },
-          { data: "Departement" },
-          { data: "Nom" },
-          { data: "Email" },
-          { data: "Reclamation" },
-          { data: "Details" }
-        ]
-      });
-    }
+    // 🔁 Surveillances
+    if (tableSurveillances) tableSurveillances.destroy();
+    tableSurveillances = $('#surveillancesTable').DataTable({
+      data: surveillances,
+      columns: [
+        { data: 0 },
+        { data: 1 },
+        { data: 2 },
+        { data: 3 },
+        { data: 4 }
+      ],
+      language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/fr-FR.json" }
+    });
 
-    // 🔹 Surveillances
-    if (surveillancesTable) surveillancesTable.clear().rows.add(surveillances.data).draw();
-    else {
-      surveillancesTable = $('#surveillancesTable').DataTable({
-        data: surveillances.data,
-        pageLength: 20,
-        columns: [
-          { data: "Date" },
-          { data: "Nom" },
-          { data: "Departement" },
-          { data: "Jour" },
-          { data: "Email" }
-        ]
-      });
-    }
+  } catch (e) {
+    alert("Erreur de chargement des données");
+    console.error(e);
+  }
 
-    // 🔹 Tableau combiné
-    const combined = [
-      ...reclamations.data.map(r => ({
-        Type: "Réclamation",
-        Date: r.Date,
-        Nom: r.Nom,
-        Departement: r.Departement,
-        D1: r.Reclamation,
-        D2: r.Details
-      })),
-      ...surveillances.data.map(s => ({
-        Type: "Surveillance",
-        Date: s.Date,
-        Nom: s.Nom,
-        Departement: s.Departement,
-        D1: s.Jour,
-        D2: s.Email
-      }))
-    ];
+  btn.disabled = false;
+  btn.textContent = "🔄 Actualiser";
+}
 
-    if (combinedTable) combinedTable.clear().rows.add(combined).draw();
-    else {
-      combinedTable = $('#combinedTable').DataTable({
-        data: combined,
-        pageLength: 20,
-        columns: [
-          { data: "Type" },
-          { data: "Date" },
-          { data: "Nom" },
-          { data: "Departement" },
-          { data: "D1" },
-          { data: "D2"
+// bouton
+document.getElementById("refreshBtn").addEventListener("click", chargerDonnees);
+
+// chargement initial (après que la page est prête)
+window.onload = chargerDonnees;
+</script>
+
+</body>
+</html>
