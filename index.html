@@ -245,5 +245,85 @@ button.dt-button:hover {
       });
     }
   </script>
+  <div class="section">
+  <h2>Gestion des PDFs Ressources</h2>
+
+  <!-- Formulaire pour ajouter un PDF -->
+  <form id="pdfForm">
+    <label>Nom:</label> <input type="text" id="nom" required><br><br>
+    <label>Lien:</label> <input type="text" id="lien" required><br><br>
+    <label>Description:</label> <input type="text" id="desc"><br><br>
+    <button type="submit">Ajouter PDF</button>
+  </form>
+
+  <div id="status" style="margin-top:10px; font-weight:bold;"></div>
+
+  <!-- Liste des PDFs existants -->
+  <h3 style="margin-top:20px;">Liste des PDFs actuels :</h3>
+  <ul id="pdfList"></ul>
+</div>
+
+<script>
+  // URL de ton Apps Script pour ajouter les PDFs
+  const PDF_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7sdWKy6YV6bq33Z4jvrX6Q7eK315xCHfHgtIFFPwy0AZwCfAX8Whm8hjpGM5AHrOVlg/exec";
+
+  // URL publique de ton Google Sheet pour lecture
+  const PDF_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQJxlIxhVoOahbHAcGuVrp3YV3AZcnT6l-Fup6ihWn8WmsbpsAo2QpAdp5EGFVa7mOHtj3IjXS0Kf8d/pubhtml";
+
+  // Ajouter un PDF via formulaire
+  document.getElementById('pdfForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const nom = document.getElementById('nom').value;
+    const lien = document.getElementById('lien').value;
+    const desc = document.getElementById('desc').value;
+
+    try {
+      const response = await fetch(PDF_APPS_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({nom, lien, desc}),
+        headers: {"Content-Type": "application/json"}
+      });
+
+      const result = await response.json();
+      document.getElementById('status').textContent = result.status === "ok" ? "PDF ajouté !" : "Erreur";
+      document.getElementById('pdfForm').reset();
+      loadPDFs(); // recharge la liste automatiquement
+    } catch(err) {
+      console.error(err);
+      document.getElementById('status').textContent = "Erreur réseau ou Apps Script";
+    }
+  });
+
+  // Charger la liste des PDFs existants
+  function loadPDFs() {
+    Tabletop.init({
+      key: PDF_SHEET_URL,
+      simpleSheet: true,
+      callback: function(data) {
+        const container = document.getElementById('pdfList');
+        container.innerHTML = ""; // vide avant de remplir
+        data.forEach(item => {
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = item.Lien;
+          a.target = "_blank";
+          a.textContent = item.Nom;
+          li.appendChild(a);
+          if(item.Description) {
+            li.innerHTML += " – " + item.Description;
+          }
+          container.appendChild(li);
+        });
+      }
+    });
+  }
+
+  // Charger la liste au chargement de la page
+  window.addEventListener('DOMContentLoaded', loadPDFs);
+</script>
+
+<!-- Tabletop.js pour lire le Google Sheet -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Tabletop.js/1.5.4/tabletop.min.js"></script>
+
 </body>
 </html>
