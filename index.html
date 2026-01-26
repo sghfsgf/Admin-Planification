@@ -8,6 +8,9 @@
   <!-- DataTables CSS -->
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
 
+  <!-- DataTables Buttons CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -89,29 +92,40 @@
     <canvas id="chartReclamations"></canvas>
   </div>
 
-  <!-- JQuery & DataTables JS -->
+  <!-- JQuery -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- DataTables -->
   <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+
+  <!-- DataTables Buttons -->
+  <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+
+  <!-- Excel dependency -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
-    // 🔹 URL de ton Apps Script
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7sdWKy6YV6bq33Z4jvrX6Q7eK315xCHfHgtIFFPwy0AZwCfAX8Whm8hjpGM5AHrOVlg/exec";
 
     $(document).ready(async function () {
       try {
-        // 🔹 Récupération des Réclamations
         const reclamationsResp = await fetch(APPS_SCRIPT_URL + "?type=reclamations");
         const reclamations = await reclamationsResp.json();
 
-        // 🔹 Récupération des Surveillances
         const surveillancesResp = await fetch(APPS_SCRIPT_URL + "?type=surveillances");
         const surveillances = await surveillancesResp.json();
 
-        // 🔹 DataTable Réclamations
         $('#reclamationsTable').DataTable({
+          dom: 'Bfrtip',
+          buttons: [{
+            extend: 'excel',
+            text: 'Exporter Excel',
+            title: 'Reclamations_Examens'
+          }],
           data: reclamations.data,
           columns: [
             { data: "Date" },
@@ -123,8 +137,13 @@
           ]
         });
 
-        // 🔹 DataTable Surveillances
         $('#surveillancesTable').DataTable({
+          dom: 'Bfrtip',
+          buttons: [{
+            extend: 'excel',
+            text: 'Exporter Excel',
+            title: 'Surveillances_Examens'
+          }],
           data: surveillances.data,
           columns: [
             { data: "Date" },
@@ -135,7 +154,6 @@
           ]
         });
 
-        // 🔹 Tableau combiné
         const combined = [
           ...reclamations.data.map(r => ({
             Type: "Réclamation",
@@ -156,6 +174,12 @@
         ];
 
         $('#combinedTable').DataTable({
+          dom: 'Bfrtip',
+          buttons: [{
+            extend: 'excel',
+            text: 'Exporter Excel',
+            title: 'Tableau_Combine_Examens'
+          }],
           data: combined,
           columns: [
             { data: "Type" },
@@ -167,12 +191,10 @@
           ]
         });
 
-        // 🔹 Création du graphique Réclamations
         createChart(reclamations.data);
 
-      } catch (error) {
-        alert("Erreur lors du chargement des données. Vérifiez l'Apps Script.");
-        console.error(error);
+      } catch (e) {
+        console.error(e);
       }
     });
 
@@ -194,9 +216,7 @@
           }]
         },
         options: {
-          scales: {
-            y: { beginAtZero: true }
-          }
+          scales: { y: { beginAtZero: true } }
         }
       });
     }
