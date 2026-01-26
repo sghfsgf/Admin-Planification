@@ -7,6 +7,7 @@
 
   <!-- DataTables CSS -->
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
 
   <style>
     body {
@@ -32,13 +33,15 @@
       margin-top: 20px;
     }
 
-    /* Bouton Export Excel en orangé vif */
+    /* Bouton Export Excel orangé vif */
     button.dt-button {
       background: #ff7a00 !important;
       color: #fff !important;
       border: none !important;
       border-radius: 4px;
       font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 10px;
     }
     button.dt-button:hover {
       background: #e66a00 !important;
@@ -47,32 +50,22 @@
 
     /* Menu principal */
     nav {
-      display:flex;
+      background: #007bff;
+      padding: 10px 20px;
+      border-radius: 6px;
+      display: flex;
       justify-content: space-between;
-      align-items:center;
-      background:#ff7a00;
-      padding:10px 20px;
-      border-radius:8px;
-      margin-bottom:20px;
+      align-items: center;
+      margin-bottom: 20px;
     }
     nav a {
-      color:#fff;
-      text-decoration:none;
-      font-weight:bold;
-      font-size:16px;
-      margin-right:20px;
+      color: white;
+      text-decoration: none;
+      margin-right: 15px;
+      font-weight: bold;
     }
-    #btnCharger {
-      background:#fff;
-      color:#ff7a00;
-      border:none;
-      padding:8px 16px;
-      border-radius:4px;
-      font-weight:bold;
-      cursor:pointer;
-    }
-    #btnCharger:hover {
-      background:#f0f0f0;
+    nav a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
@@ -81,10 +74,10 @@
   <!-- Menu principal -->
   <nav>
     <div>
-      <a href="#">Accueil</a>
+      <a href="https://sghfsgf.github.io/FSGF-examens/">Accueil</a>
     </div>
     <div>
-      <button id="btnCharger">Charger PDF</button>
+      <a href="#" onclick="alert('Fonction Charger activée !');">Charger</a>
     </div>
   </nav>
 
@@ -152,20 +145,17 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
-    // 🔹 URL de ton Apps Script
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7sdWKy6YV6bq33Z4jvrX6Q7eK315xCHfHgtIFFPwy0AZwCfAX8Whm8hjpGM5AHrOVlg/exec";
 
     $(document).ready(async function () {
       try {
-        // 🔹 Récupération des Réclamations
         const reclamationsResp = await fetch(APPS_SCRIPT_URL + "?type=reclamations");
         const reclamations = await reclamationsResp.json();
 
-        // 🔹 Récupération des Surveillances
         const surveillancesResp = await fetch(APPS_SCRIPT_URL + "?type=surveillances");
         const surveillances = await surveillancesResp.json();
 
-        // 🔹 DataTable Réclamations
+        // 🔹 DataTable Réclamations avec Export Excel
         $('#reclamationsTable').DataTable({
           dom: 'Bfrtip',
           buttons: [{ extend: 'excel', text: 'Exporter Excel', title: 'Reclamations_Examens' }],
@@ -180,7 +170,7 @@
           ]
         });
 
-        // 🔹 DataTable Surveillances
+        // 🔹 DataTable Surveillances avec Export Excel
         $('#surveillancesTable').DataTable({
           dom: 'Bfrtip',
           buttons: [{ extend: 'excel', text: 'Exporter Excel', title: 'Surveillances_Examens' }],
@@ -194,7 +184,7 @@
           ]
         });
 
-        // 🔹 Tableau combiné
+        // 🔹 Tableau combiné avec Export Excel
         const combined = [
           ...reclamations.data.map(r => ({
             Type: "Réclamation",
@@ -216,7 +206,7 @@
 
         $('#combinedTable').DataTable({
           dom: 'Bfrtip',
-          buttons: [{ extend: 'excel', text: 'Exporter Excel', title: 'Combined_Examens' }],
+          buttons: [{ extend: 'excel', text: 'Exporter Excel', title: 'Tableau_Combiné' }],
           data: combined,
           columns: [
             { data: "Type" },
@@ -228,18 +218,12 @@
           ]
         });
 
-        // 🔹 Création du graphique Réclamations
         createChart(reclamations.data);
 
       } catch (error) {
         alert("Erreur lors du chargement des données. Vérifiez l'Apps Script.");
         console.error(error);
       }
-
-      // 🔹 Bouton Charger PDF
-      document.getElementById("btnCharger").addEventListener("click", function() {
-        alert("Fonctionnalité de chargement PDF à implémenter !");
-      });
     });
 
     function createChart(data) {
@@ -267,5 +251,6 @@
       });
     }
   </script>
+
 </body>
 </html>
