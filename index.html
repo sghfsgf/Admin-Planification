@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tableau de Bord de Suivi – Planification des Examens</title>
+  <title>Admin – Planification</title>
 
   <!-- DataTables CSS -->
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
-  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+
+  <!-- DataTables Buttons CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
 
   <style>
     body {
@@ -32,45 +34,23 @@
       max-width: 800px;
       margin-top: 20px;
     }
-    /* Menu orangé vif */
-    nav {
-      background: #ff6600;
-      padding: 10px 20px;
-      border-radius: 5px;
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    nav a, nav label {
-      color: #fff;
-      font-weight: bold;
-      text-decoration: none;
-      cursor: pointer;
-      margin-right: 15px;
-      padding: 5px 10px;
-      border-radius: 4px;
-    }
-    nav a:hover, nav label:hover {
-      opacity: 0.9;
-    }
-    #pdfUpload {
-      display: none;
-    }
+    /* Bouton Export Excel en orangé vif */
+button.dt-button {
+  background: #ff7a00 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+button.dt-button:hover {
+  background: #e66a00 !important;
+  color: #fff !important;
+}
+
   </style>
 </head>
 <body>
-
-  <!-- Menu principal -->
-  <nav>
-    <div>
-      <a href="index.html">Accueil</a>
-    </div>
-    <div>
-      <label for="pdfUpload">Charger PDF</label>
-      <input type="file" id="pdfUpload" accept="application/pdf">
-    </div>
-  </nav>
 
   <h1>Tableau de Bord de Suivi – Planification des Examens</h1>
 
@@ -126,16 +106,24 @@
     <canvas id="chartReclamations"></canvas>
   </div>
 
-  <!-- JQuery, DataTables et Buttons JS -->
+  <!-- JQuery -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- DataTables -->
   <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-  <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+
+  <!-- DataTables Buttons -->
+  <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+  <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+
+  <!-- Excel dependency -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <script>
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/TON_ID/exec";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx7sdWKy6YV6bq33Z4jvrX6Q7eK315xCHfHgtIFFPwy0AZwCfAX8Whm8hjpGM5AHrOVlg/exec";
 
     $(document).ready(async function () {
       try {
@@ -145,14 +133,12 @@
         const surveillancesResp = await fetch(APPS_SCRIPT_URL + "?type=surveillances");
         const surveillances = await surveillancesResp.json();
 
-        // 🔹 Réclamations DataTable avec Export Excel
         $('#reclamationsTable').DataTable({
           dom: 'Bfrtip',
           buttons: [{
-            extend: 'excelHtml5',
+            extend: 'excel',
             text: 'Exporter Excel',
-            className: 'btnExcel', // couleur via CSS
-            exportOptions: { columns: ':visible' }
+            title: 'Reclamations_Examens'
           }],
           data: reclamations.data,
           columns: [
@@ -165,14 +151,12 @@
           ]
         });
 
-        // 🔹 Surveillances DataTable avec Export Excel
         $('#surveillancesTable').DataTable({
           dom: 'Bfrtip',
           buttons: [{
-            extend: 'excelHtml5',
+            extend: 'excel',
             text: 'Exporter Excel',
-            className: 'btnExcel',
-            exportOptions: { columns: ':visible' }
+            title: 'Surveillances_Examens'
           }],
           data: surveillances.data,
           columns: [
@@ -184,7 +168,6 @@
           ]
         });
 
-        // 🔹 Tableau combiné
         const combined = [
           ...reclamations.data.map(r => ({
             Type: "Réclamation",
@@ -207,10 +190,9 @@
         $('#combinedTable').DataTable({
           dom: 'Bfrtip',
           buttons: [{
-            extend: 'excelHtml5',
+            extend: 'excel',
             text: 'Exporter Excel',
-            className: 'btnExcel',
-            exportOptions: { columns: ':visible' }
+            title: 'Tableau_Combine_Examens'
           }],
           data: combined,
           columns: [
@@ -225,19 +207,18 @@
 
         createChart(reclamations.data);
 
-      } catch (error) {
-        alert("Erreur lors du chargement des données. Vérifiez l'Apps Script.");
-        console.error(error);
+      } catch (e) {
+        console.error(e);
       }
     });
 
-    // 🔹 Graphique
     function createChart(data) {
       const counts = {};
       data.forEach(item => {
         const dep = item.Departement || "Autre";
         counts[dep] = (counts[dep] || 0) + 1;
       });
+
       new Chart(document.getElementById("chartReclamations"), {
         type: 'bar',
         data: {
@@ -248,21 +229,11 @@
             backgroundColor: "rgba(54, 162, 235, 0.6)"
           }]
         },
-        options: { scales: { y: { beginAtZero: true } } }
+        options: {
+          scales: { y: { beginAtZero: true } }
+        }
       });
     }
-
-    // 🔹 Upload PDF
-    document.getElementById('pdfUpload').addEventListener('change', function(e){
-      const file = e.target.files[0];
-      if(!file) return;
-      alert('PDF sélectionné : ' + file.name + '\n⚠️ Téléversement sur GitHub nécessite script/API côté serveur.');
-    });
   </script>
-
-  <style>
-    /* Bouton Export Excel orangé vif */
-    .btnExcel { background:#ff6600 !important; color:#fff !important; border-radius:4px; padding:5px 10px; font-weight:bold; }
-  </style>
 </body>
 </html>
